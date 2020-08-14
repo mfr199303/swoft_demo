@@ -12,6 +12,7 @@ use Swoft\Db\Database;
 use Swoft\Db\Pool;
 use Swoft\Http\Server\HttpServer;
 use Swoft\Http\Server\Swoole\RequestListener;
+use Swoft\Log\Handler\FileHandler;
 use Swoft\Redis\RedisDb;
 use Swoft\Rpc\Client\Client as ServiceClient;
 use Swoft\Rpc\Client\Pool as ServicePool;
@@ -188,4 +189,33 @@ return [
     ],
     'cliRouter'          => [// 'disabledGroups' => ['demo', 'test'],
     ],
+
+    'lineFormatter'      => [
+        'format'     => '%datetime% [%level_name%] [%channel%] [%event%] [tid:%tid%] [cid:%cid%] [traceid:%traceid%] [spanid:%spanid%] [parentid:%parentid%] %messages%',
+        'dateFormat' => 'Y-m-d H:i:s',
+    ],
+    'noticeHandler'      => [
+        'class'     => FileHandler::class,
+        'logFile'   => '@runtime/logs/notice-%d{Y-m-d}.log',  // 2.0.6 支持日志按时间切割
+        'formatter' => \bean('lineFormatter'),
+        'levels'    => 'notice,info,debug,trace',
+    ],
+    'applicationHandler' => [
+        'class'     => FileHandler::class,
+        'logFile'   => '@runtime/logs/error.log',
+        'formatter' => \bean('lineFormatter'),
+        'levels'    => 'error,warning',
+    ],
+    'logger'             => [
+        'name' => 'swoft',
+        'flushInterval' => 1,
+        'flushRequest' => false,
+        'enable'       => true,
+        'json' => false,
+        'handlers'     => [
+            'application' => \bean('applicationHandler'),
+            'notice'      => \bean('noticeHandler'),
+        ],
+    ]
+
 ];
